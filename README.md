@@ -1,23 +1,23 @@
-https://wokwi.com/projects/481084461184291841
+# ViaTempo - Smart Alarm Hub
+## Edge computing sistems - Global Solution
 
-https://thingspeak.mathworks.com/channels/3586432/private_show
-
-Channel ID: 3586432
-Author: mwa0000043123166
-Access: Private
-
-# ViaTempo - Smart Alarm Hub (Edge Computing & IoT)
-
-
-##  Integrantes - Dev.Ak
+##  Integrantes:
 * **Anita Palhares** - RM571264
 * **Kauã Coelho** - RM568665
 * **Vitória Kereski** - RM569438
 
----
 
-##  Visão Geral da Solução
-O **ViaTempo Smart Alarm Hub** é um dispositivo de borda (Edge Computing) simulado com o microcontrolador **ESP32**, projetado para monitorar condições ambientais locais e níveis de tráfego urbano em tempo real. Integrado à plataforma em nuvem **ThingSpeak**, o terminal atua preventivamente, recalculando a rotina do usuário e acionando alertas visuais e sonoros com base em variáveis climáticas e de mobilidade.
+
+
+### O que é o Smart Alarm Hub (Terminal de Cabeceira)?
+— Um terminal de inteligente baseado no microcontrolador **ESP32**, que simula as funcionalidades da solução ViaTempo de forma simples, onde o **ViaTempo** é app voltada para a gestão preventiva da mobilidade urbana e do tempo do cidadão. Diferente de aplicativos tradicionais de rotas (como Waze ou Google Maps) que atuam apenas de forma reativa quando o usuário já está no trânsito, o ViaTempo opera na etapa de **planejamento prévio**: ele integra a rotina do usuário (tempo para acordar, se arrumar e tempo de deslocamento) às condições climáticas e viárias dinâmicas da cidade. O Smart Alarm usa da temperatura e humidade para simular as mudanças climaticas e um regulador para simular o trânsito para cumprir a funcionalidade de despertador do app: te acordar de forma dinâmica com os imprevistos da cidade.
+
+#### Em mais detalhes...
+
+— Em vez de depender exclusivamente de notificações silenciosas do smartphone (que frequentemente são ignoradas ou dependem de conexão contínua de internet no aparelho móvel), o Hub atua como uma interface física autônoma:
+1. **Monitoramento Ambiental e Viário:** Realiza leituras locais de temperatura e umidade (identificando riscos de chuvas severas ou alagamentos) e monitora o nível de congestionamento da rota prioritária.
+2. **Decisão Inteligente:** Se o nível de trânsito ou o risco climático ultrapassarem limites seguros, o Hub **não espera passivamente**: ele toma uma decisão local e autônoma, ativando alertas visuais preventivos e antecipando o alarme sonoro matinal para proteger a pontualidade do usuário.
+3. **Telemetria e Controle Bidirecional em Nuvem:** Envia dados de status para a plataforma em nuvem (**ThingSpeak**) e mantém-se preparado para receber atualizações e comandos de controle remoto.
 
 ---
 
@@ -31,11 +31,30 @@ O **ViaTempo Smart Alarm Hub** é um dispositivo de borda (Edge Computing) simul
 * **Interação Física Local:** Pushbutton com resistor interno PULL-UP (GPIO 4 - Função Soneca/Desligar)
 
 ---
+### Tabela de Pinagem 
 
-##  Lógica de Borda e Amostragem (Zero `delay`)
-Em conformidade com as boas práticas de sistemas embarcados e requisitos da disciplina:
-* **Amostragem Temporizada:** Não foi utilizado `delay()` no loop principal. Todas as rotinas de amostragem (1s), atualização de interface gráfica (500ms) e envio para a nuvem (15s) são gerenciadas por temporizadores baseados em `millis()`.
-* **Decisão Autônoma na Borda:**
+| Componente | Tipo / Função | Pino do Componente | Pino no ESP32 | Descrição / Protocolo |
+| :--- | :--- | :--- | :--- | :--- |
+| **LCD 16x2 I2C** | Interface Gráfica Local | **GND** | **GND** | Aterramento comum |
+| | | **VCC** | **5V / VIN** | Alimentação lógica do display |
+| | | **SDA** | **GPIO 21** | Linha de Dados do barramento I2C padrão |
+| | | **SCL** | **GPIO 22** | Linha de Clock do barramento I2C padrão |
+| **DHT22** | Sensor Climático Digital | **VCC (Pino 1)** | **3V3** | Alimentação positiva (3.3V) |
+| | | **SDA / DATA (Pino 2)**| **GPIO 15** | Barramento digital proprietário de leitura única |
+| | | **GND (Pino 4)** | **GND** | Aterramento comum |
+| **Potenciômetro** | Sensor Analógico de Tráfego| **GND (Pino 1)** | **GND** | Referência de 0V |
+| | | **SIG (Pino 2 - Meio)**| **GPIO 34** | Entrada analógica ADC1_CH6 (Resolução 12 bits: 0 a 4095) |
+| | | **VCC (Pino 3)** | **3V3** | Tensão de referência máxima (3.3V) |
+| **Buzzer** | Atuador Sonoro (Alarme) | **Positivo (+)** | **GPIO 18** | Modulação de sinal sonoro (Frequência de 1 kHz) |
+| | | **Negativo (-)** | **GND** | Aterramento comum |
+| **LED Vermelho** | Atuador Visual (Alerta) | **Ânodo (+)** | **GPIO 19** | Sinal digital HIGH/LOW (com resistor limitador 220Ω) |
+| | | **Cátodo (-)** | **GND** | Aterramento comum |
+| **Pushbutton** | Interação Física (Soneca)| **Terminal 1.l** | **GPIO 4** | Entrada digital configurada como `INPUT_PULLUP` interno |
+| | | **Terminal 2.r** | **GND** | Fechamento em nível lógico LOW ao pressionar |
+
+---
+
+* **Decisão Autônoma:**
   * Se o nível de trânsito ultrapassar **75%** ou a umidade relativa superar **85%** (risco iminente de temporal/alagamento), o dispositivo aciona imediatamente o LED de alerta.
   * Se o congestionamento atingir nível crítico (> **85%**), o alarme é disparado antecipadamente (`ALRM:DISPAR!`) com sinal sonoro intermitente de 1 kHz.
   * O botão físico no GPIO 4 desativa o alarme localmente através de interrupção lógica, alterando o status para Soneca.
@@ -61,6 +80,13 @@ O display fornece feedback em tempo real cumprindo os três requisitos obrigató
 
 ---
 
-## 🎬 Demonstração em Vídeo e Simulação
-* **Link da Simulação no Wokwi:** [Inserir o link público do seu projeto Wokwi]
-* **Vídeo de Demonstração (YouTube):** [Inserir link do vídeo não listado]
+## Simulação
+* **Link da Simulação no Wokwi:** https://wokwi.com/projects/481084461184291841
+* **ThingSpeak:** https://thingspeak.mathworks.com/channels/3586432/private_show
+
+Channel ID: 3586432
+
+Author: mwa0000043123166
+
+Access: Private
+
